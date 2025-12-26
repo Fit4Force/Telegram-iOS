@@ -501,22 +501,21 @@ public final class ChatEntityKeyboardInputNode: ChatInputNode {
         self.topBackgroundExtension = 34.0
         self.followsDefaultHeight = true
         
-        if "".isEmpty {
-            let backgroundView = BlurredBackgroundView(color: .black, enableBlur: true)
-            self.backgroundView = backgroundView
-            self.view.addSubview(backgroundView)
-            
-            let backgroundTintView = UIImageView()
-            self.backgroundTintView = backgroundTintView
-            self.view.addSubview(backgroundTintView)
-            
-            let backgroundTintMaskView = UIView()
-            backgroundTintMaskView.backgroundColor = .white
-            self.backgroundTintMaskView = backgroundTintMaskView
-            if let filter = CALayer.luminanceToAlpha() {
-                backgroundTintMaskView.layer.filters = [filter]
-            }
-            backgroundTintView.mask = backgroundTintMaskView
+        let backgroundView = BlurredBackgroundView(color: .black, enableBlur: true)
+        self.backgroundView = backgroundView
+        self.view.addSubview(backgroundView)
+        
+        let backgroundTintView = UIImageView()
+        self.backgroundTintView = backgroundTintView
+        self.view.addSubview(backgroundTintView)
+        
+        let backgroundTintMaskView = UIView()
+        backgroundTintMaskView.backgroundColor = .white
+        self.backgroundTintMaskView = backgroundTintMaskView
+        if let filter = CALayer.luminanceToAlpha() {
+            backgroundTintMaskView.layer.filters = [filter]
+        }
+        backgroundTintView.mask = backgroundTintMaskView
             
             let backgroundTintMaskContentView = UIView()
             backgroundTintMaskView.addSubview(backgroundTintMaskContentView)

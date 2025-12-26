@@ -277,12 +277,10 @@ final class BrowserNavigationBarComponent: CombinedComponent {
             }
             
             var centerX = maxCenterInset + (context.availableSize.width - maxCenterInset * 2.0) / 2.0
-            if "".isEmpty {
-                if canCenter {
-                    centerX = context.availableSize.width / 2.0
-                } else {
-                    centerX = centerLeftInset + (context.availableSize.width - centerLeftInset - centerRightInset) / 2.0
-                }
+            if canCenter {
+                centerX = context.availableSize.width / 2.0
+            } else {
+                centerX = centerLeftInset + (context.availableSize.width - centerLeftInset - centerRightInset) / 2.0
             }
             if let centerItem = centerItem {
                 let centerItemPosition = CGPoint(x: centerX, y: context.component.topInset + contentHeight / 2.0 + verticalOffset)

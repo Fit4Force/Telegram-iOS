@@ -479,8 +479,8 @@ public final class WebAppController: ViewController, AttachmentContainable {
         }
         
         private func load(url: URL) {
-            /*#if DEBUG
-            if "".isEmpty {
+            /*#if DEBUG && false
+            if true {
                 if #available(iOS 16.0, *) {
                     let documentsPath = URL.documentsDirectory.path(percentEncoded: false)
                     

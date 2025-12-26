@@ -249,8 +249,8 @@ public func deferred<T, E>(_ generator: @escaping() -> Signal<T, E>) -> Signal<T
 
 public func debug_measureTimeToFirstEvent<T, E>(label: String) -> (Signal<T, E>) -> Signal<T, E> {
     return { signal in
-        #if DEBUG || true
-        if "".isEmpty {
+        #if DEBUG && false
+        if true {
             var isFirst = true
             return Signal { subscriber in
                 let startTimestamp = CFAbsoluteTimeGetCurrent()

@@ -7,6 +7,7 @@ import UIKitRuntimeUtils
 import AnimatedStickerNode
 import TelegramAnimatedStickerNode
 import TelegramPresentationData
+import LiquidGlassEffect
 
 private extension CGRect {
     var center: CGPoint {
@@ -111,6 +112,9 @@ private final class TabBarItemNode: ASDisplayNode {
         }
     }
     
+    // Liquid Glass Effect for iOS Contest 2025
+    let liquidGlassNode: LiquidGlassNode
+    
     var swiped: ((TabBarItemSwipeDirection) -> Void)?
     
     var pointerInteraction: PointerInteraction?
@@ -118,6 +122,11 @@ private final class TabBarItemNode: ASDisplayNode {
     override init() {
         self.extractedContainerNode = ContextExtractedContentContainingNode()
         self.containerNode = ContextControllerSourceNode()
+        
+        // Initialize liquid glass effect
+        self.liquidGlassNode = LiquidGlassNode()
+        self.liquidGlassNode.isUserInteractionEnabled = false
+        self.liquidGlassNode.alpha = 0.0 // Initially hidden
         
         self.ringImageNode = ASImageNode()
         self.ringImageNode.isUserInteractionEnabled = false
@@ -159,6 +168,8 @@ private final class TabBarItemNode: ASDisplayNode {
         
         self.isAccessibilityElement = true
         
+        // Add liquid glass lens behind icon - contest requirement: glass lenses blur bar's own content
+        self.extractedContainerNode.contentNode.insertSubnode(self.liquidGlassNode, at: 0)
         self.extractedContainerNode.contentNode.addSubnode(self.ringImageNode)
         self.extractedContainerNode.contentNode.addSubnode(self.textImageNode)
         self.extractedContainerNode.contentNode.addSubnode(self.imageNode)
@@ -180,6 +191,7 @@ private final class TabBarItemNode: ASDisplayNode {
             transition.updateAlpha(node: strongSelf.textImageNode, alpha: isExtracted ? 0.0 : 1.0)
             transition.updateAlpha(node: strongSelf.contextImageNode, alpha: isExtracted ? 1.0 : 0.0)
             transition.updateAlpha(node: strongSelf.contextTextImageNode, alpha: isExtracted ? 1.0 : 0.0)
+            transition.updateAlpha(node: strongSelf.liquidGlassNode, alpha: isExtracted ? 0.0 : (strongSelf.isSelected ? 1.0 : 0.0))
         }
     }
     
@@ -589,6 +601,9 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
                 node.contentWidth = max(contentWidth, imageContentWidth)
                 node.isSelected = true
                 
+                // LIQUID GLASS EFFECT: Show glass lens on selected tab
+                ContainedViewLayoutTransition.animated(duration: 0.3, curve: .easeInOut).updateAlpha(node: node.liquidGlassNode, alpha: 1.0)
+                
                 if !self.reduceMotion && item.item.ringSelection {
                     ContainedViewLayoutTransition.animated(duration: 0.2, curve: .easeInOut).updateTransformScale(node: node.ringImageNode, scale: 1.0, delay: 0.1)
                     node.imageNode.layer.animateScale(from: 1.0, to: 0.87, duration: 0.1, removeOnCompletion: false, completion: { [weak node] _ in
@@ -621,6 +636,9 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
                 node.contextImageNode.image = contextImage
                 node.contentWidth = max(contentWidth, imageContentWidth)
                 node.isSelected = false
+                
+                // LIQUID GLASS EFFECT: Hide glass lens on unselected tab
+                ContainedViewLayoutTransition.animated(duration: 0.3, curve: .easeInOut).updateAlpha(node: node.liquidGlassNode, alpha: 0.0)
                 
                 ContainedViewLayoutTransition.animated(duration: 0.2, curve: .easeInOut).updateTransformScale(node: node.ringImageNode, scale: 0.5)
             }
@@ -737,6 +755,19 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
                 node.ringImageNode.bounds = CGRect(origin: CGPoint(), size: ringImageFrame.size)
                 node.ringImageNode.position = ringImageFrame.center
                 
+                // LIQUID GLASS EFFECT: Position glass lens behind icon
+                let glassSize = CGSize(width: 50.0, height: 50.0) // Slightly larger than icon for glass effect
+                let glassFrame = CGRect(
+                    origin: CGPoint(
+                        x: floorToScreenPixels((nodeSize.width - glassSize.width) / 2.0),
+                        y: horizontal ? 2.0 : -2.0
+                    ),
+                    size: glassSize
+                )
+                transition.updateFrame(node: node.liquidGlassNode, frame: glassFrame)
+                node.liquidGlassNode.glassCornerRadius = 25.0 // Make it circular
+                node.liquidGlassNode.tintColor = UIColor(white: 1.0, alpha: 0.12)
+                
                 if node.ringColor != nil {
                     node.imageNode.bounds = CGRect(origin: CGPoint(), size: imageFrame.size)
                     node.imageNode.position = imageFrame.center
@@ -801,6 +832,12 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
             if let closestNode = closestNode {
                 let container = self.tabBarNodeContainers[closestNode.0]
                 let previousSelectedIndex = self.selectedIndex
+                
+                // LIQUID GLASS EFFECT: Tap animation with highlight, scale, and bounce
+                if !self.reduceMotion {
+                    container.imageNode.liquidGlassNode.animatePressWithHighlight(scale: 0.88)
+                }
+                
                 self.itemSelected(closestNode.0, longTap, [container.imageNode.imageNode, container.imageNode.textImageNode, container.badgeContainerNode])
                 if previousSelectedIndex != closestNode.0 {
                     if let selectedIndex = self.selectedIndex, let _ = self.tabBarItems[selectedIndex].item.animationName {
